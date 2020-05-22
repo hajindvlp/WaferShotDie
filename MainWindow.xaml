@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WaferShotDie"
         xmlns:control="clr-namespace:WaferShotDie"
+        Closing="Window_Closing"
         mc:Ignorable="d"
         Title="WaferShotdie" Height="500" Width="900">
 
