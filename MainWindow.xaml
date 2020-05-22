@@ -6,13 +6,16 @@
         xmlns:local="clr-namespace:WaferShotDie"
         xmlns:control="clr-namespace:WaferShotDie"
         mc:Ignorable="d"
-        Title="WaferShotdie" Height="450" Width="800">
+        Title="WaferShotdie" Height="500" Width="900">
 
     <Window.Resources>
         <Style TargetType="Label">
             <Setter Property="FontSize" Value="16" />
         </Style>
         <Style TargetType="TextBox">
+            <Setter Property="FontSize" Value="16" />
+        </Style>
+        <Style TargetType="TextBlock">
             <Setter Property="FontSize" Value="16" />
         </Style>
     </Window.Resources>
@@ -24,9 +27,9 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <StackPanel Grid.Column="0" Margin="5">
+        <DockPanel VerticalAlignment="Stretch" Grid.Column="0" Margin="5">
 
-            <Grid Name="WaferConfig">
+            <Grid Name="WaferConfig" DockPanel.Dock="Top">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="4*"/>
                     <ColumnDefinition Width="7*"/>
@@ -36,7 +39,7 @@
                 <TextBox Grid.Column="1" Name="numWaferDiameter" TextChanged="numWaferDiameter_TextChanged"/>
             </Grid>
 
-            <GroupBox Name="UnitConfig" FontSize="16">
+            <GroupBox Name="UnitConfig" FontSize="16" DockPanel.Dock="Top">
 
                 <GroupBox.Header>
                     Unit
@@ -69,7 +72,7 @@
 
             </GroupBox>
 
-            <Grid Name="ButtonControls" Margin="0 5">
+            <Grid Name="ButtonControls" Margin="0 5" DockPanel.Dock="Top">
                 
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="1*"/>
@@ -94,12 +97,86 @@
                 
             </Grid>
 
-            <ScrollViewer HorizontalScrollBarVisibility="Auto" Margin="0 10">
-                <StackPanel Name="ChipsetListView" Height="260">
-                </StackPanel>
-            </ScrollViewer>
 
-        </StackPanel>
+            <Border BorderBrush="Black" BorderThickness="0.5 0.5 0.5 1" DockPanel.Dock="Top">
+                <Grid Name="ChipsetCofigGrid"  Margin="0">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="3*" />
+                        <ColumnDefinition Width="3*" />
+                        <ColumnDefinition Width="5*" />
+                        <ColumnDefinition Width="5*" />
+                        <ColumnDefinition Width="10" />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Grid.Column="1">
+                        <Label Grid.Column="0" Content="X" HorizontalAlignment="Center" />
+                    </Grid>
+
+                    <Grid Grid.Column="2">
+                        <Label Grid.Column="0" Content="Y" HorizontalAlignment="Center" />
+                    </Grid>
+
+                    <Grid Grid.Column="3">
+                        <Label Grid.Column="0" Content="Width" HorizontalAlignment="Center" />
+                    </Grid>
+
+                    <Grid Grid.Column="4">
+                        <Label Grid.Column="0" Content="Height" HorizontalAlignment="Center" />
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <Grid DockPanel.Dock="Top">
+                <ScrollViewer HorizontalScrollBarVisibility="Hidden" Margin="0 10" Height="160">
+                    <StackPanel Name="ChipsetListView">
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+
+            <GroupBox FontSize="12">
+                <GroupBox.Header>
+                    Results
+                </GroupBox.Header>
+                <Grid Name="CalcuationsGrid">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="5*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.RowSpan="3" BorderBrush="Black" BorderThickness="0 0 0.5 0" />
+
+                    <Viewbox>
+                        <Label Content="Max Unit Num" />
+                    </Viewbox>
+                    <Viewbox Grid.Column="1">
+                        <TextBlock Name="mxUnitNumText" />
+                    </Viewbox>
+
+                    <Viewbox Grid.Row="1">
+                        <Label Content="Max Chip Num" />
+                    </Viewbox>
+                    <Viewbox Grid.Row="1" Grid.Column="1">
+                        <TextBlock Name="mxChipNumText" />
+                    </Viewbox>
+
+                    <Viewbox Grid.Row="2">
+                        <Label Content="Max Distance" />
+                    </Viewbox>
+                    <Viewbox Grid.Row="2" Grid.Column="1">
+                        <TextBlock Name="mxDistText" />
+                    </Viewbox>
+                </Grid>
+            </GroupBox>
+
+        </DockPanel>
 
         <Border Name="WaferCanvasContainer" Grid.Column="1" BorderBrush="Black" BorderThickness="1" Margin="1" Background="LightGray"
                 ClipToBounds="True"

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.DirectoryServices.ActiveDirectory;
 using System.Linq;
 using System.Text;
@@ -23,7 +24,7 @@ namespace WaferShotDie
     {
         public static _Chips Chips = new _Chips();
 
-        public draw WaferDraw = new draw(0, 0);
+        public static draw WaferDraw = new draw(0, 0);
         public ScaleTransform WaferSt = new ScaleTransform(1, -1);
         public TranslateTransform WaferTt = new TranslateTransform();
         public TransformGroup WaferTg = new TransformGroup();
@@ -43,20 +44,83 @@ namespace WaferShotDie
             WaferDraw.cv = WaferCanvas;
         }
 
+        public static void DrawFullWafer()
+        {
+            int i, j, k, l;
+            int maxFitUnitOnWidth = (int)Math.Ceiling(Chips.Wafer.Radius / Chips.Unit.width) + 1;
+            int maxFitUnitOnHeight = (int)Math.Ceiling(Chips.Wafer.Radius / Chips.Unit.height) + 1;
+            double startY, startX, UnitStartY, UnitStartX;
+
+            logger.Log($"{maxFitUnitOnHeight} {maxFitUnitOnWidth}");
+
+            startY = Chips.whenMxChip.y;
+            startX = Chips.whenMxChip.x;
+            for (i = -maxFitUnitOnHeight; i <= maxFitUnitOnHeight; i++)
+            {
+                for (j = -maxFitUnitOnWidth; j <= maxFitUnitOnWidth; j++)
+                {
+                    UnitStartY = i * Chips.Unit.height + startY;
+                    UnitStartX = j * Chips.Unit.width + startX;
+
+                    logger.Log($"{UnitStartX} {UnitStartY}");
+
+                    bool UnitOk = false;
+                    for (k = 0; k < 4; k++)
+                    {
+                        double dist = Chips.distToO(UnitStartX + Chips.Unit.coord[k].x, UnitStartY + Chips.Unit.coord[k].y);
+
+                        if (dist < Chips.Wafer.Radius) UnitOk = true;
+                    }
+
+                    if (UnitOk)
+                    {
+                        WaferDraw.rect(UnitStartX, UnitStartY, Chips.Unit.width, Chips.Unit.height, "#001580", 0.3);
+
+                        foreach (_Chips._Chip chip in Chips.Unit.set)
+                        {
+                            if (!chip.Disabled) WaferDraw.rect(UnitStartX + chip.startX, UnitStartY + chip.startY,
+                                                               chip.width, chip.height,
+                                                               "#7600c9", 0.3);
+                        }
+                    }
+                }
+            }
+        }
+
+        public static void DrawWafer(bool Final)
+        {
+            WaferDraw.clearCv();
+            WaferDraw.circle(0, 0, Chips.Wafer.Diameter, "#de9726", 0.3);
+            
+            if (Final) DrawFullWafer();
+            else
+            {
+                WaferDraw.rect(0, 0, Chips.Unit.width, Chips.Unit.height, "#001580", 0.3);
+                foreach (_Chips._Chip chip in Chips.Unit.set)
+                {
+                    if (!chip.Disabled) WaferDraw.rect(chip.startX, chip.startY, chip.width, chip.height, "#7600c9", 0.3);
+                }
+            }
+            
+        }
+
         private void numUnitWidth_TextChanged(object sender, TextChangedEventArgs e)
         {
             Chips.Unit.width = ToDouble(numUnitWidth.Text);
+            DrawWafer(false);
         }
 
         private void numUnitHeight_TextChanged(object sender, TextChangedEventArgs e)
         {
             Chips.Unit.height = ToDouble(numUnitHeight.Text);
+            DrawWafer(false);
         }
 
         private void numWaferDiameter_TextChanged(object sender, TextChangedEventArgs e)
         {
             Chips.Wafer.Diameter = ToDouble(numWaferDiameter.Text);
             Chips.Wafer.Radius = Chips.Wafer.Diameter / 2;
+            DrawWafer(false);
         }
 
         private double ToDouble(string S)
@@ -81,14 +145,7 @@ namespace WaferShotDie
 
         private void DrawChipButton_Click(object sender, RoutedEventArgs e)
         {
-            WaferDraw.clearCv();
-            WaferDraw.circle(0, 0, Chips.Wafer.Diameter, "#de9726", 0.3);
-            WaferDraw.rect(0, 0, Chips.Unit.width, Chips.Unit.height, "#001580", 0.3);
-
-            foreach(_Chips._Chip chip in Chips.Unit.set)
-            {
-                WaferDraw.rect(chip.startX, chip.startY, chip.width, chip.height, "#7600c9", 0.5);
-            }
+            DrawWafer(false);
         }
 
         private void Calculate_Click(object sender, RoutedEventArgs e)
@@ -96,6 +153,12 @@ namespace WaferShotDie
             Chips.Calculate();
 
             logger.Log($"{Chips.mxChipCnt} {Chips.mxUnitCnt} {Chips.mxDist}");
+
+            mxUnitNumText.Text = Chips.mxUnitCnt.ToString();
+            mxChipNumText.Text = Chips.mxChipCnt.ToString();
+            mxDistText.Text = Chips.mxDist.ToString();
+
+            DrawWafer(true);
         }
 
         private void WaferCanvas_MouseWheel(object sender, MouseWheelEventArgs e)
@@ -118,12 +181,24 @@ namespace WaferShotDie
 
         protected bool isDragging;
         private Point clickPosition;
+        public double baseX, baseY, aX, aY;
 
         private void WaferCanvas_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            if (e.ChangedButton == MouseButton.Middle && e.ButtonState == MouseButtonState.Pressed)
+            {
+                logger.Log("dsfads");
+                WaferTt.X = WaferTt.Y = 0;
+                WaferSt.ScaleX = WaferSt.ScaleY = 1;
+                return;
+            }
+
             isDragging = true;
             clickPosition = e.GetPosition(WaferCanvasContainer);
             WaferCanvasContainer.CaptureMouse();
+
+            aX = 0;
+            aY = 0;
         }
 
         private void WaferCanvas_MouseUp(object sender, MouseButtonEventArgs e)
@@ -131,6 +206,12 @@ namespace WaferShotDie
             isDragging = false;
             clickPosition = e.GetPosition(WaferCanvasContainer);
             WaferCanvasContainer.ReleaseMouseCapture();
+
+            baseX = WaferTt.X;
+            baseY = WaferTt.Y;
+
+            aX = 0;
+            aY = 0;
         }
 
         private void WaferCanvas_MouseMove(object sender, MouseEventArgs e)
@@ -138,10 +219,8 @@ namespace WaferShotDie
             if (isDragging && sender != null) 
             {
                 Point currentPosition = e.GetPosition(WaferCanvasContainer);
-                WaferTt.X += currentPosition.X - clickPosition.X;
-                WaferTt.Y += currentPosition.Y - clickPosition.Y;
-
-                logger.Log($"{currentPosition.X - clickPosition.X} {currentPosition.Y - clickPosition.Y}");
+                aX = WaferTt.X = baseX + currentPosition.X - clickPosition.X;
+                aY = WaferTt.Y = baseY + currentPosition.Y - clickPosition.Y;
             } 
         }
     }
@@ -152,6 +231,7 @@ namespace WaferShotDie
         public _Unit Unit = new _Unit();
 
         public int mxUnitCnt, mxChipCnt;
+        public _coord whenMxUnit, whenMxChip;
         public double mxDist;
 
         public class _coord
@@ -176,22 +256,32 @@ namespace WaferShotDie
         public class _Unit
         {
             public double width, height;
-            public int ChipNum;
+            public int ChipNum, ActualChipNum;
             public List<_Chip> set = new List<_Chip>();
             public _coord[] coord = new _coord[4];
         }
 
         public class _Chip
         {
+            public bool Disabled = false;
             public double width, height;
             public double startX, startY;
             public _coord[] coord = new _coord[4];
+
+            public void clear()
+            {
+                Disabled = true;
+                width = height = startX = startY = 0;
+            }
         }
 
         public void Calculate()
         {
             double i, j;
             int k, l, m, n;
+
+            List<_Chip> actualSet = new List<_Chip>();
+            int ChipNum = 0;
 
             Unit.coord[0] = new _coord(0, 0);
             Unit.coord[1] = new _coord(Unit.width, 0);
@@ -200,14 +290,21 @@ namespace WaferShotDie
 
             for(k=0; k<Unit.ChipNum; k++)
             {
-                Unit.set[k].coord[0] = new _coord(Unit.set[k].startX, Unit.set[k].startY);
-                Unit.set[k].coord[1] = new _coord(Unit.set[k].startX + Unit.set[k].width, Unit.set[k].startY);
-                Unit.set[k].coord[2] = new _coord(Unit.set[k].startX, Unit.set[k].startY+Unit.set[k].height);
-                Unit.set[k].coord[3] = new _coord(Unit.set[k].startX + Unit.set[k].width, Unit.set[k].startY + Unit.set[k].height);
+                if (!Unit.set[k].Disabled) 
+                {
+                    Unit.ActualChipNum++;
+                    ChipNum++;
+                    actualSet.Add(Unit.set[k]);
+
+                    actualSet[ChipNum-1].coord[0] = new _coord(actualSet[ChipNum-1].startX, actualSet[ChipNum-1].startY);
+                    actualSet[ChipNum-1].coord[1] = new _coord(actualSet[ChipNum-1].startX + actualSet[ChipNum-1].width, actualSet[ChipNum-1].startY);
+                    actualSet[ChipNum-1].coord[2] = new _coord(actualSet[ChipNum-1].startX, actualSet[ChipNum-1].startY + actualSet[ChipNum-1].height);
+                    actualSet[ChipNum-1].coord[3] = new _coord(actualSet[ChipNum-1].startX + actualSet[ChipNum-1].width, actualSet[ChipNum-1].startY + actualSet[ChipNum-1].height);
+                }
             }
 
-            int maxFitUnitOnWidth = (int)Math.Floor(Wafer.Radius / Unit.width) + 1;
-            int maxFitUnitOnHeight = (int)Math.Floor(Wafer.Radius / Unit.height) + 1;
+            int maxFitUnitOnWidth = (int)Math.Ceiling(Wafer.Radius / Unit.width) + 1;
+            int maxFitUnitOnHeight = (int)Math.Ceiling(Wafer.Radius / Unit.height) + 1;
 
             double UnitStartX, UnitStartY;
             double stepX, stepY;
@@ -225,8 +322,8 @@ namespace WaferShotDie
                     for(k=-maxFitUnitOnHeight; k<=maxFitUnitOnHeight; k++)
                         for(l=-maxFitUnitOnWidth; l<=maxFitUnitOnWidth; l++)
                         {
-                            UnitStartY = (double)k * Unit.height + i;
-                            UnitStartX = (double)l * Unit.width + i;
+                            UnitStartY = k * Unit.height + i;
+                            UnitStartX = l * Unit.width + i;
 
                             bool UnitOk = true;
                             for (n = 0; n < 4; n++)
@@ -238,18 +335,18 @@ namespace WaferShotDie
 
                             if (UnitOk) {
                                 UnitCnt++;
+                                ChipCnt += ChipNum;
                                 continue;
                             }
 
-                            for (m=0; m<Unit.ChipNum; m++)
+                            for (m=0; m<ChipNum; m++)
                             {
                                 bool ChipOk = true;
                                 for(n=0; n<4; n++)
                                 {
-                                    double dist = distToO(UnitStartX + Unit.set[m].coord[n].x, UnitStartY + Unit.set[m].coord[n].y);
+                                    double dist = distToO(UnitStartX + actualSet[m].coord[n].x, UnitStartY + actualSet[m].coord[n].y);
 
                                     if (dist > mxDist) mxDist = dist;
-
                                     if (dist > Wafer.Radius) ChipOk = false;
                                 }
 
@@ -260,15 +357,17 @@ namespace WaferShotDie
                     if (mxUnitCnt < UnitCnt) 
                     {
                         mxUnitCnt = UnitCnt;
-                        MainWindow.logger.Log($"mxUnitCnt Updated : {mxUnitCnt}");
+                        whenMxChip = new _coord(j, i);
+                        MainWindow.logger.Log($"mxUnitCnt Updated : {mxUnitCnt} When {i} {j} {ChipCnt}");
                     }
                     if (mxChipCnt < ChipCnt) 
                     {
                         mxChipCnt = ChipCnt;
-                        MainWindow.logger.Log($"mxChipCnt Updated : {mxChipCnt}");
+                        whenMxChip = new _coord(j, i);
+                        MainWindow.logger.Log($"mxChipCnt Updated : {mxChipCnt} When {i} {j} {UnitCnt}");
                     }
                 }
-            }
+        }
 
         public double distToO(double x, double y)
         {
@@ -361,12 +460,16 @@ namespace WaferShotDie
 
             private void drawCircle()
             {
+                SolidColorBrush FillBrush = (SolidColorBrush)(new BrushConverter().ConvertFrom(colorHex));
+                FillBrush.Opacity = opacity;
+
                 Ellipse circle = new Ellipse()
                 {
                     Width = diameter * scale,
                     Height = diameter * scale,
-                    Fill = (SolidColorBrush)(new BrushConverter().ConvertFrom(colorHex)),
-                    Opacity = opacity
+                    Fill = FillBrush,
+                    Stroke = (SolidColorBrush)(new BrushConverter().ConvertFrom(colorHex)),
+                    StrokeThickness = 0.5
                 };
 
                 circle.SetValue(Canvas.LeftProperty, x * scale);
@@ -377,12 +480,16 @@ namespace WaferShotDie
 
             private void drawRect()
             {
+                SolidColorBrush FillBrush = (SolidColorBrush)(new BrushConverter().ConvertFrom(colorHex));
+                FillBrush.Opacity = opacity;
+
                 Rectangle rect = new Rectangle()
                 {
                     Width = width * scale,
                     Height = height * scale,
-                    Fill = (SolidColorBrush)(new BrushConverter().ConvertFrom(colorHex)),
-                    Opacity = opacity
+                    Fill = FillBrush,
+                    Stroke = (SolidColorBrush)(new BrushConverter().ConvertFrom(colorHex)),
+                    StrokeThickness = 0.5,
                 };
 
                 rect.SetValue(Canvas.LeftProperty, x * scale);

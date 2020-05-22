@@ -20,5 +20,4 @@ C:\Users\Tool\Dev\WaferShotDie\obj\Debug\netcoreapp3.1\WaferShotDie.genruntimeco
 C:\Users\Tool\Dev\WaferShotDie\obj\Debug\netcoreapp3.1\Logger.g.cs
 C:\Users\Tool\Dev\WaferShotDie\obj\Debug\netcoreapp3.1\Logger.baml
 C:\Users\Tool\Dev\WaferShotDie\obj\Debug\netcoreapp3.1\ChipConfig.g.cs
-C:\Users\Tool\Dev\WaferShotDie\obj\Debug\netcoreapp3.1\GeneratedInternalTypeHelper.g.cs
 C:\Users\Tool\Dev\WaferShotDie\obj\Debug\netcoreapp3.1\ChipConfig.baml

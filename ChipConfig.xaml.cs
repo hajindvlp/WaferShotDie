@@ -29,21 +29,32 @@ namespace WaferShotDie
         private void numChipStartX_TextChanged(object sender, TextChangedEventArgs e)
         {
             MainWindow.Chips.Unit.set[ChipNum].startX = ToDouble(numChipStartX.Text);
+            MainWindow.DrawWafer(false);
         }
 
         private void numChipStartY_TextChanged(object sender, TextChangedEventArgs e)
         {
             MainWindow.Chips.Unit.set[ChipNum].startY = ToDouble(numChipStartY.Text);
+            MainWindow.DrawWafer(false);
         }
 
         private void numChipWidth_TextChanged(object sender, TextChangedEventArgs e)
         {
             MainWindow.Chips.Unit.set[ChipNum].width = ToDouble(numChipWidth.Text);
+            MainWindow.DrawWafer(false);
         }
 
         private void numChipHeight_TextChanged(object sender, TextChangedEventArgs e)
         {
             MainWindow.Chips.Unit.set[ChipNum].height = ToDouble(numChipHeight.Text);
+            MainWindow.DrawWafer(false);
+        }
+
+        private void RemoveChip_Click(object sender, RoutedEventArgs e)
+        {
+            MainWindow.Chips.Unit.set[ChipNum].clear();
+            ((Panel)Parent).Children.Remove(this);
+            MainWindow.DrawWafer(false);
         }
 
         private double ToDouble(string S)
