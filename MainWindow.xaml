@@ -28,7 +28,7 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <DockPanel VerticalAlignment="Stretch" Grid.Column="0" Margin="5">
+        <StackPanel Grid.Column="0" Margin="5">
 
             <Grid Name="WaferConfig" DockPanel.Dock="Top">
                 <Grid.ColumnDefinitions>
@@ -154,30 +154,30 @@
 
                     <Border Grid.RowSpan="3" BorderBrush="Black" BorderThickness="0 0 0.5 0" />
 
-                    <Viewbox>
+                    <Grid>
                         <Label Content="Max Unit Num" />
-                    </Viewbox>
-                    <Viewbox Grid.Column="1">
+                    </Grid>
+                    <Grid Grid.Column="1">
                         <TextBlock Name="mxUnitNumText" />
-                    </Viewbox>
+                    </Grid>
 
-                    <Viewbox Grid.Row="1">
+                    <Grid Grid.Row="1">
                         <Label Content="Max Chip Num" />
-                    </Viewbox>
-                    <Viewbox Grid.Row="1" Grid.Column="1">
+                    </Grid>
+                    <Grid Grid.Row="1" Grid.Column="1">
                         <TextBlock Name="mxChipNumText" />
-                    </Viewbox>
+                    </Grid>
 
-                    <Viewbox Grid.Row="2">
+                    <Grid Grid.Row="2">
                         <Label Content="Max Distance" />
-                    </Viewbox>
-                    <Viewbox Grid.Row="2" Grid.Column="1">
+                    </Grid>
+                    <Grid Grid.Row="2" Grid.Column="1">
                         <TextBlock Name="mxDistText" />
-                    </Viewbox>
+                    </Grid>
                 </Grid>
             </GroupBox>
 
-        </DockPanel>
+        </StackPanel>
 
         <Border Name="WaferCanvasContainer" Grid.Column="1" BorderBrush="Black" BorderThickness="1" Margin="1" Background="LightGray"
                 ClipToBounds="True"
